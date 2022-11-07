@@ -6,34 +6,46 @@ output:
   html_document: default
   pdf_document: default
 ---
-Assignment – Web APIs
+# Assignment – Web APIs
 The New York Times web site provides a rich set of APIs, as described here: https://developer.nytimes.com/apis
 You’ll need to start by signing up for an API key. Your task is to choose one of the New York Times APIs, construct an interface in R to read in the JSON data, and transform it into an R DataFrame.
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
+api_key <- "N1sS2g6ji8HmCwjPfuGVz4QkHnUIj9oS" #personal API Key
 ```
 
 ```{r}
 library(tidyverse)
-library(dplyr)
-library(ggplot2)
 library(jsonlite)
-library(stringr)
+library(httr)
 ```
 
+# Get API 
+```{r}
+api_search <- "https://api.nytimes.com/svc/search/v2/articlesearch.json?q=election&api-key="
+r <- GET(paste0(api_search, api_key))
+status_code(r)
 
-## API
+```
+# Retrieve API 
+```{r}
+data <- content(r, as="text")
+newdata <- fromJSON(data, flatten=TRUE) %>% data.frame()
+
+colnames(newdata)
+
+```
+# Tidy Data
+```{r}
+df_news <- newdata %>%
+select(response.docs.headline.main, response.meta.hits, response.docs.web_url,response.docs.pub_date)
+
+```
 
 ```{r}
-url <- "https://api.nytimes.com/svc/search/v2/articlesearch.json?q=election&api-key=yourkey"
-api_key <- "N1sS2g6ji8HmCwjPfuGVz4QkHnUIj9oS" #personal API Key
-api_path <- paste(url,api_key, sep = "")
+df_news %>%
+rename("Headline" = 1, "Hits" = 2, "URL" = 3, "Date" = 4,)
 ```
-
-I tried to read json data and insert it into R data frame- search.articles <- as.data.frame(fromJSON(api_path)) but #Error in open.connection(con, "rb") : HTTP error 401.
-
-
-If there werent an error in the step above I would use summary, head/ colnames to review the data frame.
-
+### Odd observation that they all had the same number of hits
 
